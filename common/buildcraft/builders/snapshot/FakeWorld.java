@@ -30,10 +30,7 @@ import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.structure.template.TemplateManager;
-import net.minecraft.world.storage.IPlayerFileData;
-import net.minecraft.world.storage.ISaveHandler;
-import net.minecraft.world.storage.SaveDataMemoryStorage;
-import net.minecraft.world.storage.WorldInfo;
+import net.minecraft.world.storage.*;
 import net.minecraftforge.common.DimensionManager;
 
 import javax.annotation.Nullable;
@@ -121,7 +118,7 @@ public class FakeWorld extends WorldServer {
                 new Profiler()
         );
         chunkProvider = new FakeChunkProvider(this);
-        mapStorage = new SaveDataMemoryStorage();
+        mapStorage = new MapStorage(this.saveHandler);
     }
 
     @Override
@@ -131,7 +128,7 @@ public class FakeWorld extends WorldServer {
 
     @Override
     public void tick() {
-        
+
     }
 
     public void clear() {
