@@ -26,34 +26,44 @@ import net.minecraft.world.*;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.structure.template.TemplateManager;
 import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
+import net.minecraft.world.storage.SaveDataMemoryStorage;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.DimensionManager;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
 
-public class FakeWorld extends World {
+public class FakeWorld extends WorldServer {
     public static final Biome BIOME = Biomes.PLAINS;
     public static final BlockPos BLUEPRINT_OFFSET = new BlockPos(0, 127, 0);
+    //The initial release date for Buildcraft
+    public static final int DIMENSION_ID = -26042011;
+    public static FakeWorld INSTANCE;
 
-    public static FakeWorld INSTANCE = new FakeWorld();
+    static {
+        DimensionType type = DimensionType.register("BC_FakeDimensionType", "_BC", DIMENSION_ID, WorldProviderSurface.class, true);
+        DimensionManager.registerDimension(DIMENSION_ID, type);
+        INSTANCE = new FakeWorld();
+    }
 
     private final List<ItemStack> drops = new ArrayList<>();
     public boolean editable = true;
 
     public FakeWorld() {
-        super(
-            new ISaveHandler() {
-                @Nullable
-                @Override
-                public WorldInfo loadWorldInfo() {
-                    return null;
-                }
+        super(new FakeMinecraftServer(),
+                new ISaveHandler() {
+                    @Nullable
+                    @Override
+                    public WorldInfo loadWorldInfo() {
+                        return null;
+                    }
 
                 @Override
                 public void checkSessionLock() throws MinecraftException {
@@ -92,31 +102,36 @@ public class FakeWorld extends World {
                     return null;
                 }
 
-                @Override
-                public TemplateManager getStructureTemplateManager() {
-                    return null;
-                }
-            },
-            new WorldInfo(
-                new WorldSettings(
-                    0,
-                    GameType.CREATIVE,
-                    true,
-                    false,
-                    WorldType.DEFAULT
+                    @Override
+                    public TemplateManager getStructureTemplateManager() {
+                        return null;
+                    }
+                },
+                new WorldInfo(
+                        new WorldSettings(
+                                0,
+                                GameType.CREATIVE,
+                                true,
+                                false,
+                                WorldType.DEFAULT
+                        ),
+                        "fake"
                 ),
-                "fake"
-            ),
-            new WorldProvider() {
-                @Override
-                public DimensionType getDimensionType() {
-                    return DimensionType.OVERWORLD;
-                }
-            },
-            new Profiler(),
-            false
+                DIMENSION_ID,
+                new Profiler()
         );
         chunkProvider = new FakeChunkProvider(this);
+        mapStorage = new SaveDataMemoryStorage();
+    }
+
+    @Override
+    public File getChunkSaveLocation() {
+        return new File("BC_Fake_World");
+    }
+
+    @Override
+    public void tick() {
+        
     }
 
     public void clear() {
