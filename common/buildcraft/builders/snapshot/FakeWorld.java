@@ -44,14 +44,15 @@ public class FakeWorld extends WorldServer {
     public static final int DIMENSION_ID = -26042011;
     public static FakeWorld INSTANCE;
 
-    static {
+    private final List<ItemStack> drops = new ArrayList<>();
+    public boolean editable = true;
+
+    //init was already taken
+    public static void onInit() {
         DimensionType type = DimensionType.register("BC_FakeDimensionType", "_BC", DIMENSION_ID, WorldProviderSurface.class, true);
         DimensionManager.registerDimension(DIMENSION_ID, type);
         INSTANCE = new FakeWorld();
     }
-
-    private final List<ItemStack> drops = new ArrayList<>();
-    public boolean editable = true;
 
     public FakeWorld() {
         super(new FakeMinecraftServer(),

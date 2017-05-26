@@ -86,6 +86,7 @@ public class BCBuilders {
 
     @Mod.EventHandler
     public static void init(FMLInitializationEvent evt) {
+        FakeWorld.onInit();
         BCBuildersProxy.getProxy().fmlInit();
         BCBuildersRecipes.init();
     }
