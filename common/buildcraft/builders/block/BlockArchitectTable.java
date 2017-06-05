@@ -69,4 +69,6 @@ public class BlockArchitectTable extends BlockBCTile_Neptune implements IBlockWi
     public boolean canBeRotated(World world, BlockPos pos, IBlockState state, EnumFacing sideWrenched) {
         return false;
     }
+
+
 }

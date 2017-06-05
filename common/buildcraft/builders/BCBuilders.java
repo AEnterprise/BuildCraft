@@ -7,9 +7,7 @@ package buildcraft.builders;
 import java.util.function.Consumer;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.DimensionType;
 
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -30,7 +28,6 @@ import buildcraft.lib.registry.TagManager.EnumTagType;
 import buildcraft.lib.registry.TagManager.TagEntry;
 
 import buildcraft.builders.addon.AddonFillingPlanner;
-import buildcraft.lib.dimension.BlankWorldProvider;
 import buildcraft.builders.snapshot.GlobalSavedDataSnapshots;
 import buildcraft.builders.snapshot.MessageSnapshotRequest;
 import buildcraft.builders.snapshot.MessageSnapshotResponse;

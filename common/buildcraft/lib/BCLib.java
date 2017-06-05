@@ -16,8 +16,8 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLMissingMappingsEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -104,6 +104,11 @@ public class BCLib {
         FakeWorldServer fake = new FakeWorldServer(event.getServer());
         fake.init();
         DimensionManager.setWorld(DIMENSION_ID, fake, event.getServer());
+    }
+
+    @Mod.EventHandler
+    public static void serverStop(FMLServerStoppedEvent event) {
+        FakeWorldServer.INSTANCE = null;
     }
 
     @Mod.EventHandler

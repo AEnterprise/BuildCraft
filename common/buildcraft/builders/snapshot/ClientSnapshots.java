@@ -34,6 +34,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import buildcraft.api.schematics.ISchematicEntity;
 
+import buildcraft.lib.dimension.FakeWorldClient;
 import buildcraft.lib.dimension.FakeWorldServer;
 import buildcraft.lib.net.MessageManager;
 
@@ -42,7 +43,7 @@ public enum ClientSnapshots {
 
     private final List<Snapshot> snapshots = new ArrayList<>();
     private final List<Snapshot.Header> pending = new ArrayList<>();
-    private final Map<Snapshot.Header, FakeWorldServer> worlds = new HashMap<>();
+    private final Map<Snapshot.Header, FakeWorldClient> worlds = new HashMap<>();
     private final Map<Snapshot.Header, VertexBuffer> buffers = new HashMap<>();
 
     public Snapshot getSnapshot(Snapshot.Header header) {
@@ -73,8 +74,8 @@ public enum ClientSnapshots {
 
     @SideOnly(Side.CLIENT)
     public void renderSnapshot(Snapshot snapshot, int offsetX, int offsetY, int sizeX, int sizeY) {
-        FakeWorldServer world = worlds.computeIfAbsent(snapshot.header, localHeader -> {
-            FakeWorldServer localWorld = FakeWorldServer.INSTANCE;
+        FakeWorldClient world = worlds.computeIfAbsent(snapshot.header, localHeader -> {
+            FakeWorldClient localWorld = new FakeWorldClient();
             if (snapshot instanceof Blueprint) {
                 localWorld.uploadBlueprint((Blueprint) snapshot, false);
                 for (ISchematicEntity<?> schematicEntity : ((Blueprint) snapshot).entities) {
