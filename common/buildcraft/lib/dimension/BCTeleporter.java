@@ -4,7 +4,7 @@
  * distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/
  */
 
-package buildcraft.builders.dimension;
+package buildcraft.lib.dimension;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.world.Teleporter;

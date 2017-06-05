@@ -4,23 +4,23 @@
  * distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/
  */
 
-package buildcraft.builders.dimension;
+package buildcraft.lib.dimension;
 
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldProvider;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkGenerator;
+
+import buildcraft.lib.BCLib;
 
 import buildcraft.builders.BCBuilders;
 
 public class BlankWorldProvider extends WorldProvider {
     @Override
     public DimensionType getDimensionType() {
-        return BCBuilders.blueprintDimensionType;
+        return BCLib.blueprintDimensionType;
     }
 
     @Override

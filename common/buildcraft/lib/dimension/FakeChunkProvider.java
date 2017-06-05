@@ -4,7 +4,7 @@
  * distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/
  */
 
-package buildcraft.builders.snapshot;
+package buildcraft.lib.dimension;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,11 +15,13 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 
+
+
 public class FakeChunkProvider implements IChunkProvider {
-    private final FakeWorld world;
+    private final FakeWorldServer world;
     public final Map<ChunkPos, Chunk> chunks = new HashMap<>();
 
-    public FakeChunkProvider(FakeWorld world) {
+    public FakeChunkProvider(FakeWorldServer world) {
         this.world = world;
     }
 

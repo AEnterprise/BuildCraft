@@ -4,16 +4,14 @@
  * distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/
  */
 
-package buildcraft.builders.snapshot;
+package buildcraft.lib.dimension;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.mojang.authlib.GameProfile;
@@ -27,110 +25,46 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.profiler.Profiler;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameType;
-import net.minecraft.world.MinecraftException;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraft.world.chunk.storage.IChunkLoader;
 import net.minecraft.world.gen.layer.GenLayer;
-import net.minecraft.world.gen.structure.template.TemplateManager;
-import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
 
+import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import buildcraft.api.schematics.ISchematicBlock;
 
-public class FakeWorld extends World {
+import buildcraft.lib.BCLib;
+
+import buildcraft.builders.snapshot.Blueprint;
+
+public class FakeWorldServer extends WorldServerMulti {
     public static final Biome BIOME = Biomes.PLAINS;
     public static final BlockPos BLUEPRINT_OFFSET = new BlockPos(0, 127, 0);
 
-    public static FakeWorld INSTANCE = new FakeWorld();
+    public static FakeWorldServer INSTANCE;
 
     private final List<ItemStack> drops = new ArrayList<>();
     public boolean editable = true;
 
-    public FakeWorld() {
-        super(
-            new ISaveHandler() {
-                @Nullable
-                @Override
-                public WorldInfo loadWorldInfo() {
-                    return null;
-                }
-
-                @Override
-                public void checkSessionLock() throws MinecraftException {
-
-                }
-
-                @Override
-                public IChunkLoader getChunkLoader(WorldProvider provider) {
-                    return null;
-                }
-
-                @Override
-                public void saveWorldInfoWithPlayer(WorldInfo worldInformation, NBTTagCompound tagCompound) {
-                }
-
-                @Override
-                public void saveWorldInfo(WorldInfo worldInformation) {
-                }
-
-                @Override
-                public IPlayerFileData getPlayerNBTManager() {
-                    return null;
-                }
-
-                @Override
-                public void flush() {
-                }
-
-                @Override
-                public File getWorldDirectory() {
-                    return null;
-                }
-
-                @Override
-                public File getMapFileFromName(String mapName) {
-                    return null;
-                }
-
-                @Override
-                public TemplateManager getStructureTemplateManager() {
-                    return null;
-                }
-            },
-            new WorldInfo(
-                new WorldSettings(
-                    0,
-                    GameType.CREATIVE,
-                    true,
-                    false,
-                    WorldType.DEFAULT
-                ),
-                "fake"
-            ),
-            new WorldProvider() {
-                @Override
-                public DimensionType getDimensionType() {
-                    return DimensionType.OVERWORLD;
-                }
-            },
-            new Profiler(),
-            false
-        );
-        chunkProvider = new FakeChunkProvider(this);
+    public FakeWorldServer(MinecraftServer server) {
+        super(server, DimensionManager.getWorld(0).getSaveHandler(), BCLib.DIMENSION_ID, DimensionManager.getWorld(0), server.profiler);
+        this.chunkProvider = new FakeChunkProvider(this);
+        INSTANCE = this;
     }
 
     public void clear() {
@@ -143,9 +77,9 @@ public class FakeWorld extends World {
                 for (int x = -1; x <= blueprint.size.getX(); x++) {
                     BlockPos pos = new BlockPos(x, y, z).add(BLUEPRINT_OFFSET);
                     if (x == -1 || y == -1 || z == -1 ||
-                        x == blueprint.size.getX() ||
-                        y == blueprint.size.getY() ||
-                        z == blueprint.size.getZ()) {
+                            x == blueprint.size.getX() ||
+                            y == blueprint.size.getY() ||
+                            z == blueprint.size.getZ()) {
                         setBlockState(pos, useStone ? Blocks.STONE.getDefaultState() : Blocks.AIR.getDefaultState());
                     } else {
                         ISchematicBlock<?> schematicBlock = blueprint.palette.get(blueprint.data[x][y][z]);
@@ -168,23 +102,23 @@ public class FakeWorld extends World {
         if (drops.isEmpty()) {
             entity.isDead = false;
             entity.attackEntityFrom(
-                DamageSource.causePlayerDamage(
-                    new EntityPlayer(
-                        this,
-                        new GameProfile(UUID.randomUUID(), "fake")
-                    ) {
-                        @Override
-                        public boolean isSpectator() {
-                            return false;
-                        }
+                    DamageSource.causePlayerDamage(
+                            new EntityPlayer(
+                                    this,
+                                    new GameProfile(UUID.randomUUID(), "fake")
+                            ) {
+                                @Override
+                                public boolean isSpectator() {
+                                    return false;
+                                }
 
-                        @Override
-                        public boolean isCreative() {
-                            return false;
-                        }
-                    }
-                ),
-                100
+                                @Override
+                                public boolean isCreative() {
+                                    return false;
+                                }
+                            }
+                    ),
+                    100
             );
         }
         List<ItemStack> dropsCopy = new ArrayList<>(drops);
@@ -329,6 +263,7 @@ public class FakeWorld extends World {
         }
     }
 
+    @SideOnly(Side.CLIENT)
     @Override
     public void joinEntityInSurroundings(Entity entity) {
         if (editable) {

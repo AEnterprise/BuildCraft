@@ -16,7 +16,6 @@ public class WorldState {
     private final Vector3f cameraPos;
     private final double cameraYaw, cameraPitch;
     // private final Vec3i size;
-    // private final FakeWorld world;
     private final List<WorldLabel> labels;
 
     public WorldState(WorldInfo info) {

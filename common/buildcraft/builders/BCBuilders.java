@@ -30,7 +30,7 @@ import buildcraft.lib.registry.TagManager.EnumTagType;
 import buildcraft.lib.registry.TagManager.TagEntry;
 
 import buildcraft.builders.addon.AddonFillingPlanner;
-import buildcraft.builders.dimension.BlankWorldProvider;
+import buildcraft.lib.dimension.BlankWorldProvider;
 import buildcraft.builders.snapshot.GlobalSavedDataSnapshots;
 import buildcraft.builders.snapshot.MessageSnapshotRequest;
 import buildcraft.builders.snapshot.MessageSnapshotResponse;
@@ -50,8 +50,6 @@ import buildcraft.core.marker.volume.AddonsRegistry;
 //@formatter:on
 public class BCBuilders {
     public static final String MODID = "buildcraftbuilders";
-    public static DimensionType blueprintDimensionType;
-    public static final int DIMENSION_ID = -26042011;
 
     @Mod.Instance(MODID)
     public static BCBuilders INSTANCE = null;
@@ -98,9 +96,6 @@ public class BCBuilders {
 
         MessageManager.addMessageType(MessageSnapshotRequest.class, MessageSnapshotRequest.HANDLER, Side.SERVER);
         MessageManager.addMessageType(MessageSnapshotResponse.class, MessageSnapshotResponse.HANDLER, Side.CLIENT);
-
-        blueprintDimensionType = DimensionType.register("The dimension of blueprints", "", DIMENSION_ID, BlankWorldProvider.class, true);
-        DimensionManager.registerDimension(DIMENSION_ID, blueprintDimensionType);
     }
 
     @Mod.EventHandler
