@@ -117,15 +117,16 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
         }
         return toPlace;
     }
+
     @Override
     protected boolean canPlace(BlockPos blockPos) {
         return !getBuildingInfo().toPlace.get(blockPos).isAir()
-                && getBuildingInfo().toPlace.get(blockPos).canBuild(tile.getWorldBC(), blockPos)
-                && getBuildingInfo().toPlace.get(blockPos).getRequiredBlockOffsets().stream()
-                .map(blockPos::add)
-                .allMatch(pos ->
-                        getBuildingInfo().toPlace.containsKey(pos) ? isBlockCorrect(pos) : !getToBreak().contains(pos) || tile.getWorldBC().isAirBlock(pos)
-                );
+            && getBuildingInfo().toPlace.get(blockPos).canBuild(tile.getWorldBC(), blockPos)
+            && getBuildingInfo().toPlace.get(blockPos).getRequiredBlockOffsets().stream()
+            .map(blockPos::add)
+            .allMatch(pos ->
+                getBuildingInfo().toPlace.containsKey(pos) ? isBlockCorrect(pos) : !getToBreak().contains(pos) || tile.getWorldBC().isAirBlock(pos)
+            );
     }
 
     @Override
@@ -133,7 +134,7 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
         Blueprint.BuildingInfo info = getBuildingInfo();
         if (info != null && info.toPlaceRequiredItems.containsKey(blockPos)) {
             List<ItemStack> list = tryExtractRequired(info.toPlaceRequiredItems.get(blockPos), info.toPlaceRequiredFluids.get(blockPos));
-            if (list!= null) {
+            if (list != null) {
                 return list;
             }
         }
@@ -201,7 +202,7 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
                 )
                 .collect(Collectors.toList());
             // Compute needed stacks
-                updateRequirements(buildingInfo, toSpawn);
+            updateRequirements(buildingInfo, toSpawn);
             // Kill not needed entities
             List<Entity> toKill = entitiesWithinBox.stream()
                 .filter(entity ->
@@ -252,23 +253,23 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
     private void updateRequirements(Blueprint.BuildingInfo buildingInfo, List<ISchematicEntity<?>> toSpawn) {
         remainingDisplayRequired.clear();
         remainingDisplayRequired.addAll(StackUtil.mergeSameItems(
-                Stream.concat(
-                        getToPlace().stream()
-                                .filter(blockPos -> !isBlockCorrect(blockPos))
-                                .flatMap(blockPos ->
-                                        getDisplayRequired(
-                                                buildingInfo.toPlaceRequiredItems.get(blockPos),
-                                                buildingInfo.toPlaceRequiredFluids.get(blockPos)
-                                        )
-                                ),
-                        toSpawn.stream()
-                                .flatMap(schematicEntity ->
-                                        getDisplayRequired(
-                                                buildingInfo.entitiesRequiredItems.get(schematicEntity),
-                                                buildingInfo.entitiesRequiredFluids.get(schematicEntity)
-                                        )
-                                )
-                ).collect(Collectors.toList())
+            Stream.concat(
+                getToPlace().stream()
+                    .filter(blockPos -> !isBlockCorrect(blockPos))
+                    .flatMap(blockPos ->
+                        getDisplayRequired(
+                            buildingInfo.toPlaceRequiredItems.get(blockPos),
+                            buildingInfo.toPlaceRequiredFluids.get(blockPos)
+                        )
+                    ),
+                toSpawn.stream()
+                    .flatMap(schematicEntity ->
+                        getDisplayRequired(
+                            buildingInfo.entitiesRequiredItems.get(schematicEntity),
+                            buildingInfo.entitiesRequiredFluids.get(schematicEntity)
+                        )
+                    )
+            ).collect(Collectors.toList())
         ));
     }
 
