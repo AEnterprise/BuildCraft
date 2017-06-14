@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,6 +37,7 @@ import buildcraft.lib.net.PacketBufferBC;
 public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> {
     private static final double MAX_ENTITY_DISTANCE = 0.1D;
     public List<ItemStack> remainingDisplayRequired = new ArrayList<>();
+    private List<BlockPos> toPlace = Collections.emptyList();
 
     public BlueprintBuilder(ITileForBlueprintBuilder tile) {
         super(tile);
@@ -107,45 +107,41 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
 
     @Override
     protected List<BlockPos> getToBreak() {
-        return Optional.ofNullable(getBuildingInfo())
-            .map(buildingInfo -> buildingInfo.toBreak)
-            .orElse(Collections.emptyList());
+        return getBuildingInfo() != null ? getBuildingInfo().toBreak : Collections.emptyList();
     }
 
     @Override
     protected List<BlockPos> getToPlace() {
-        return Optional.ofNullable(getBuildingInfo())
-            .map(buildingInfo -> getBuildingInfo().toPlace)
-            .map(Map::keySet)
-            .<List<BlockPos>>map(ArrayList::new)
-            .orElse(Collections.emptyList());
+        if (toPlace.isEmpty() && getBuildingInfo() != null) {
+            toPlace = new ArrayList<>(getBuildingInfo().toPlace.keySet());
+        }
+        return toPlace;
     }
-
     @Override
     protected boolean canPlace(BlockPos blockPos) {
-        return getBuildingInfo().toPlace.get(blockPos).getRequiredBlockOffsets().stream()
-            .map(blockPos::add)
-            .allMatch(pos ->
-                getBuildingInfo().toPlace.containsKey(pos)
-                    ? isBlockCorrect(pos)
-                    : !getToBreak().contains(pos) || tile.getWorldBC().isAirBlock(pos)
-            ) &&
-            !getBuildingInfo().toPlace.get(blockPos).isAir() &&
-            getBuildingInfo().toPlace.get(blockPos).canBuild(tile.getWorldBC(), blockPos);
+        return !getBuildingInfo().toPlace.get(blockPos).isAir()
+                && getBuildingInfo().toPlace.get(blockPos).canBuild(tile.getWorldBC(), blockPos)
+                && getBuildingInfo().toPlace.get(blockPos).getRequiredBlockOffsets().stream()
+                .map(blockPos::add)
+                .allMatch(pos ->
+                        getBuildingInfo().toPlace.containsKey(pos) ? isBlockCorrect(pos) : !getToBreak().contains(pos) || tile.getWorldBC().isAirBlock(pos)
+                );
     }
 
     @Override
     protected List<ItemStack> getToPlaceItems(BlockPos blockPos) {
-        return Optional.ofNullable(getBuildingInfo()).map(buildingInfo ->
-            tryExtractRequired(
-                buildingInfo.toPlaceRequiredItems.get(blockPos),
-                buildingInfo.toPlaceRequiredFluids.get(blockPos)
-            )
-        ).orElse(Collections.emptyList());
+        Blueprint.BuildingInfo info = getBuildingInfo();
+        if (info != null && info.toPlaceRequiredItems.containsKey(blockPos)) {
+            List<ItemStack> list = tryExtractRequired(info.toPlaceRequiredItems.get(blockPos), info.toPlaceRequiredFluids.get(blockPos));
+            if (list!= null) {
+                return list;
+            }
+        }
+        return Collections.emptyList();
     }
 
     @Override
-    protected void cancelPlaceTask(PlaceTask placeTask) {
+    protected void cancelPlaceTask(SnapshotTask.PlaceTask placeTask) {
         // noinspection ConstantConditions
         placeTask.items.stream()
             .filter(stack -> !stack.hasTagCompound() || !stack.getTagCompound().hasKey("BuilderFluidStack"))
@@ -172,7 +168,7 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
     }
 
     @Override
-    protected boolean doPlaceTask(PlaceTask placeTask) {
+    protected boolean doPlaceTask(SnapshotTask.PlaceTask placeTask) {
         return getBuildingInfo() != null &&
             getBuildingInfo().toPlace.get(placeTask.pos) != null &&
             getBuildingInfo().toPlace.get(placeTask.pos).build(tile.getWorldBC(), placeTask.pos);
@@ -205,26 +201,7 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
                 )
                 .collect(Collectors.toList());
             // Compute needed stacks
-            remainingDisplayRequired.clear();
-            remainingDisplayRequired.addAll(StackUtil.mergeSameItems(
-                Stream.concat(
-                    getToPlace().stream()
-                        .filter(blockPos -> !isBlockCorrect(blockPos))
-                        .flatMap(blockPos ->
-                            getDisplayRequired(
-                                buildingInfo.toPlaceRequiredItems.get(blockPos),
-                                buildingInfo.toPlaceRequiredFluids.get(blockPos)
-                            )
-                        ),
-                    toSpawn.stream()
-                        .flatMap(schematicEntity ->
-                            getDisplayRequired(
-                                buildingInfo.entitiesRequiredItems.get(schematicEntity),
-                                buildingInfo.entitiesRequiredFluids.get(schematicEntity)
-                            )
-                        )
-                ).collect(Collectors.toList())
-            ));
+                updateRequirements(buildingInfo, toSpawn);
             // Kill not needed entities
             List<Entity> toKill = entitiesWithinBox.stream()
                 .filter(entity ->
@@ -270,6 +247,29 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
                 return false;
             }
         }).orElseGet(super::tick);
+    }
+
+    private void updateRequirements(Blueprint.BuildingInfo buildingInfo, List<ISchematicEntity<?>> toSpawn) {
+        remainingDisplayRequired.clear();
+        remainingDisplayRequired.addAll(StackUtil.mergeSameItems(
+                Stream.concat(
+                        getToPlace().stream()
+                                .filter(blockPos -> !isBlockCorrect(blockPos))
+                                .flatMap(blockPos ->
+                                        getDisplayRequired(
+                                                buildingInfo.toPlaceRequiredItems.get(blockPos),
+                                                buildingInfo.toPlaceRequiredFluids.get(blockPos)
+                                        )
+                                ),
+                        toSpawn.stream()
+                                .flatMap(schematicEntity ->
+                                        getDisplayRequired(
+                                                buildingInfo.entitiesRequiredItems.get(schematicEntity),
+                                                buildingInfo.entitiesRequiredFluids.get(schematicEntity)
+                                        )
+                                )
+                ).collect(Collectors.toList())
+        ));
     }
 
     @Override

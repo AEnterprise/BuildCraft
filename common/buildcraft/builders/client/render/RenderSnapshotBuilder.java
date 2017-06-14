@@ -17,6 +17,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import buildcraft.lib.client.render.ItemRenderUtil;
 import buildcraft.lib.client.render.laser.LaserData_BC8;
 import buildcraft.lib.client.render.laser.LaserRenderer_BC8;
@@ -25,8 +28,10 @@ import buildcraft.lib.misc.VecUtil;
 
 import buildcraft.builders.snapshot.ITileForSnapshotBuilder;
 import buildcraft.builders.snapshot.SnapshotBuilder;
+import buildcraft.builders.snapshot.SnapshotTask;
 import buildcraft.core.client.BuildCraftLaserManager;
 
+@SideOnly(Side.CLIENT)
 public class RenderSnapshotBuilder {
     public static <T extends ITileForSnapshotBuilder> void render(
             SnapshotBuilder<T> snapshotBuilder,
@@ -38,12 +43,12 @@ public class RenderSnapshotBuilder {
             float partialTicks,
             VertexBuffer vb
     ) {
-        for (SnapshotBuilder<T>.PlaceTask placeTask : snapshotBuilder.clientPlaceTasks) {
+        for (SnapshotTask.PlaceTask placeTask : snapshotBuilder.clientPlaceTasks) {
             Vec3d prevPos = snapshotBuilder.prevClientPlaceTasks.stream()
                     .filter(renderTaskLocal -> renderTaskLocal.pos.equals(placeTask.pos))
                     .map(snapshotBuilder::getPlaceTaskItemPos)
                     .findFirst()
-                    .orElse(snapshotBuilder.getPlaceTaskItemPos(snapshotBuilder.new PlaceTask(tilePos, Collections.emptyList(), 0L)));
+                    .orElse(snapshotBuilder.getPlaceTaskItemPos(new SnapshotTask.PlaceTask(tilePos, Collections.emptyList(), 0L)));
             Vec3d pos = prevPos.add(snapshotBuilder.getPlaceTaskItemPos(placeTask).subtract(prevPos).scale(partialTicks));
             for (ItemStack item : placeTask.items) {
                 ItemRenderUtil.renderItemStack(
@@ -77,12 +82,12 @@ public class RenderSnapshotBuilder {
 
             vb.setTranslation(x - tilePos.getX(), y - tilePos.getY(), z - tilePos.getZ());
 
-            for (SnapshotBuilder.BreakTask breakTask : snapshotBuilder.clientBreakTasks) {
+            for (SnapshotTask.BreakTask breakTask : snapshotBuilder.clientBreakTasks) {
                 LaserRenderer_BC8.renderLaserDynamic(
                         new LaserData_BC8(
                                 BuildCraftLaserManager.POWERS[(int) Math.round(
                                         MathUtil.clamp(
-                                                breakTask.power * 1D / breakTask.getTarget(),
+                                                breakTask.power * 1D / breakTask.getTarget(snapshotBuilder.getTile()),
                                                 0D,
                                                 1D
                                         ) * (BuildCraftLaserManager.POWERS.length - 1)

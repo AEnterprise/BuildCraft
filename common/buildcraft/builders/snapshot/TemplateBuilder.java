@@ -55,7 +55,7 @@ public class TemplateBuilder extends SnapshotBuilder<ITileForTemplateBuilder> {
     }
 
     @Override
-    protected boolean doPlaceTask(PlaceTask placeTask) {
+    protected boolean doPlaceTask(SnapshotTask.PlaceTask placeTask) {
         FakePlayer fakePlayer = BuildCraftAPI.fakePlayerProvider.getFakePlayer(
             (WorldServer) tile.getWorldBC(),
             tile.getOwner(),
@@ -71,7 +71,7 @@ public class TemplateBuilder extends SnapshotBuilder<ITileForTemplateBuilder> {
     }
 
     @Override
-    protected void cancelPlaceTask(PlaceTask placeTask) {
+    protected void cancelPlaceTask(SnapshotTask.PlaceTask placeTask) {
         tile.getInvResources().insert(placeTask.items.get(0), false, false);
     }
 

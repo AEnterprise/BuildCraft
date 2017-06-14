@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
@@ -118,6 +117,8 @@ public class TileBuilder extends TileBC_Neptune implements ITickable, IDebuggabl
         if (itemHandler == invSnapshot) {
             currentBasePosIndex = 0;
             snapshot = null;
+            blueprintBuildingInfo = null;
+            blueprintBuilder.remainingDisplayRequired.clear();
             if (after.getItem() instanceof ItemSnapshot) {
                 Snapshot.Header header = BCBuildersItems.snapshot.getHeader(after);
                 if (header != null) {
@@ -200,7 +201,8 @@ public class TileBuilder extends TileBC_Neptune implements ITickable, IDebuggabl
         battery.tick(getWorld(), getPos());
         battery.addPowerChecking(64 * MjAPI.MJ, false);
         if (getBuilder() != null) {
-            if (isDone = getBuilder().tick()) {
+            isDone = getBuilder().tick();
+            if (isDone) {
                 if (currentBasePosIndex < basePoses.size() - 1) {
                     currentBasePosIndex++;
                     if (currentBasePosIndex >= basePoses.size()) {
@@ -273,6 +275,7 @@ public class TileBuilder extends TileBC_Neptune implements ITickable, IDebuggabl
                 readPayload(NET_SNAPSHOT_TYPE, buffer, side, ctx);
             }
             if (id == NET_GUI_DATA || id == NET_GUI_TICK) {
+                // noinspection
                 tankManager.readData(buffer);
             }
             if (id == NET_CAN_EXCAVATE) {

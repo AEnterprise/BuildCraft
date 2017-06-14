@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -339,7 +338,7 @@ public class SchematicBlockDefault implements ISchematicBlock<SchematicBlockDefa
                 placeBlock.getDefaultState()
             );
         }
-        if (world.setBlockState(blockPos, newBlockState, 11)) {
+        if (world.setBlockState(blockPos, newBlockState, 3)) {
             updateBlockOffsets.stream()
                 .map(blockPos::add)
                 .forEach(updatePos -> world.notifyNeighborsOfStateChange(updatePos, placeBlock, false));
