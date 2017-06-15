@@ -255,7 +255,7 @@ public class BlueprintBuilder extends SnapshotBuilder<ITileForBlueprintBuilder> 
         remainingDisplayRequired.addAll(StackUtil.mergeSameItems(
             Stream.concat(
                 getToPlace().stream()
-                    .filter(blockPos -> !isBlockCorrect(blockPos))
+                    .filter(blockPos -> !completed.contains(blockPos) )
                     .flatMap(blockPos ->
                         getDisplayRequired(
                             buildingInfo.toPlaceRequiredItems.get(blockPos),

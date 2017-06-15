@@ -12,6 +12,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 
@@ -39,24 +41,29 @@ import buildcraft.lib.net.PacketBufferBC;
 public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> implements IWorldEventListener {
     private static final int MAX_QUEUE_SIZE = 10;
     private static final int MAX_CHECK = 20;
+    private final Comparator<BlockPos> COMPARATOR = Comparator.comparing(blockPos ->
+        Math.pow(blockPos.getX() - getBox().center().getX(), 2) +
+            Math.pow(blockPos.getZ() - getBox().center().getZ(), 2) +
+            100_000 - Math.abs(blockPos.getY() - getTile().getBuilderPos().getY()) * 100_000
+    );
 
     protected final T tile;
-    private Queue<SnapshotTask.BreakTask> breakTasks = new ArrayDeque<>();
+    protected Queue<SnapshotTask.BreakTask> breakTasks = new ArrayDeque<>();
     public Queue<SnapshotTask.BreakTask> clientBreakTasks = new ArrayDeque<>();
     public Queue<SnapshotTask.BreakTask> prevClientBreakTasks = new ArrayDeque<>();
-    private Queue<SnapshotTask.PlaceTask> placeTasks = new ArrayDeque<>();
+    protected Queue<SnapshotTask.PlaceTask> placeTasks = new ArrayDeque<>();
     public Queue<SnapshotTask.PlaceTask> clientPlaceTasks = new ArrayDeque<>();
     public Queue<SnapshotTask.PlaceTask> prevClientPlaceTasks = new ArrayDeque<>();
     private Queue<BlockPos> blocksToCheck = new ArrayDeque<>();
     private List<BlockPos> allBlocks = new ArrayList<>();
-    private List<BlockPos> toCheckForBreaking = new ArrayList<>();
-    private List<BlockPos> toCheckForPlacing = new ArrayList<>();
+    protected Set<BlockPos> toCheckForBreaking = new TreeSet<>(COMPARATOR);
+    protected Set<BlockPos> toCheckForPlacing = new TreeSet<>(COMPARATOR);
+    protected Set<BlockPos> completed = new TreeSet<>();
     public Vec3d robotPos = null;
     public Vec3d prevRobotPos = null;
     public int leftToBreak;
     public int leftToPlace;
     private boolean initialized = false;
-    private int tickCount, prevBreakCount, prevPlaceCount;
 
     protected SnapshotBuilder(T tile) {
         this.tile = tile;
@@ -146,11 +153,7 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
             allBlocks.addAll(blocksToCheck);
             tile.getWorldBC().addEventListener(this);
             initialized = true;
-            tickCount = 0;
         }
-        tickCount++;
-        prevBreakCount = toCheckForBreaking.size();
-        prevPlaceCount = toCheckForPlacing.size();
         int i = 0;
         while (i < MAX_CHECK && !blocksToCheck.isEmpty()) {
             i++;
@@ -162,42 +165,35 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
 
             BlockPos pos = blocksToCheck.poll();
             if (!isBlockCorrect(pos)) {
+                if (completed.contains(pos)) {
+                    completed.remove(pos);
+                }
                 if (!tile.getWorldBC().isAirBlock(pos) && !toCheckForBreaking.contains(pos)) {
                     toCheckForBreaking.add(pos);
                 } else if (!toCheckForPlacing.contains(pos)) {
                     toCheckForPlacing.add(pos);
                 }
+            } else {
+                completed.add(pos);
             }
         }
-        if (tickCount % 30 == 0 && prevBreakCount != toCheckForBreaking.size()) {
-            toCheckForBreaking.sort(Comparator.comparing(blockPos ->
-                Math.pow(blockPos.getX() - getBox().center().getX(), 2) +
-                    Math.pow(blockPos.getZ() - getBox().center().getZ(), 2) +
-                    100_000 - Math.abs(blockPos.getY() - tile.getBuilderPos().getY()) * 100_000
-            ));
-        }
+        Iterator<BlockPos> iterator = toCheckForBreaking.iterator();
         if (breakTasks.size() < MAX_QUEUE_SIZE && !toCheckForBreaking.isEmpty()) {
-            BlockPos pos = toCheckForBreaking.get(0);
+            BlockPos pos = iterator.next();
             if (BlockUtil.getFluidWithFlowing(tile.getWorldBC(), pos) == null) {
                 breakTasks.add(new SnapshotTask.BreakTask(pos, 0));
             }
-            toCheckForBreaking.remove(0);
-        }
-        if (tickCount % 30 == 15 && prevPlaceCount != toCheckForPlacing.size()) {
-            toCheckForPlacing.sort(Comparator.comparing(blockPos ->
-                Math.pow(blockPos.getX() - getBox().center().getX(), 2) +
-                    Math.pow(blockPos.getZ() - getBox().center().getZ(), 2) +
-                    100_000 - Math.abs(blockPos.getY() - tile.getBuilderPos().getY()) * 100_000
-            ));
+            iterator.remove();
         }
 
+        iterator = toCheckForPlacing.iterator();
         if (placeTasks.size() < MAX_QUEUE_SIZE && !toCheckForPlacing.isEmpty()) {
-            BlockPos pos = toCheckForPlacing.get(0);
+            BlockPos pos = iterator.next();
             List<ItemStack> stacks = getToPlaceItems(pos);
             if (!stacks.isEmpty() && !stacks.contains(ItemStack.EMPTY) && canPlace(pos)) {
                 placeTasks.add(new SnapshotTask.PlaceTask(pos, stacks, 0));
             }
-            toCheckForPlacing.remove(0);
+            iterator.remove();
         }
 
         leftToBreak = toCheckForBreaking.size() + breakTasks.size();
