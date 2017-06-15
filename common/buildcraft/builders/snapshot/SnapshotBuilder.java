@@ -157,19 +157,19 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
         int i = 0;
         while (i < MAX_CHECK && !blocksToCheck.isEmpty()) {
             i++;
-                if (blocksToCheck.isEmpty() && toCheckForPlacing.isEmpty() && placeTasks.isEmpty() && breakTasks.isEmpty() && ((toCheckForBreaking.isEmpty() && breakTasks.isEmpty()) || (!tile.canExcavate() && blocksToCheck.size() == toCheckForBreaking.size()))) {
-                    tile.getWorldBC().removeEventListener(this);
-                    return true;
-                }
-
-
+            if (blocksToCheck.isEmpty() && toCheckForPlacing.isEmpty() && placeTasks.isEmpty() && breakTasks.isEmpty() && ((toCheckForBreaking.isEmpty() && breakTasks.isEmpty()) || (!tile.canExcavate() && blocksToCheck.size() == toCheckForBreaking.size()))) {
+                tile.getWorldBC().removeEventListener(this);
+                return true;
+            }
             BlockPos pos = blocksToCheck.poll();
             if (!isBlockCorrect(pos)) {
                 if (completed.contains(pos)) {
                     completed.remove(pos);
                 }
-                if (!tile.getWorldBC().isAirBlock(pos) && !toCheckForBreaking.contains(pos)) {
-                    toCheckForBreaking.add(pos);
+                if (!tile.getWorldBC().isAirBlock(pos)) {
+                    if (!toCheckForBreaking.contains(pos)) {
+                        toCheckForBreaking.add(pos);
+                    }
                 } else if (!toCheckForPlacing.contains(pos)) {
                     toCheckForPlacing.add(pos);
                 }
@@ -192,8 +192,8 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
             List<ItemStack> stacks = getToPlaceItems(pos);
             if (!stacks.isEmpty() && !stacks.contains(ItemStack.EMPTY) && canPlace(pos)) {
                 placeTasks.add(new SnapshotTask.PlaceTask(pos, stacks, 0));
+                iterator.remove();
             }
-            iterator.remove();
         }
 
         leftToBreak = toCheckForBreaking.size() + breakTasks.size();
@@ -232,6 +232,7 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
                             false
                         );
                     }
+                    blocksToCheck.offer(breakTask.pos);
                     breakIterator.remove();
                 } else {
                     tile.getWorldBC().sendBlockBreakProgress(
@@ -258,10 +259,11 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
                             false
                         );
                         cancelPlaceTask(placeTask);
-                        toCheckForPlacing.add(placeTask.pos);
                     }
                     placeIterator.remove();
+                    blocksToCheck.add(placeTask.pos);
                 }
+
             }
         }
         return false;
@@ -286,6 +288,8 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
     }
 
     public void cancel() {
+        tile.getWorldBC().removeEventListener(this);
+        initialized = false;
         breakTasks.forEach(breakTask ->
             tile.getBattery().addPower(
                 Math.min(breakTask.getTarget(tile), tile.getBattery().getCapacity() - tile.getBattery().getStored()),
@@ -298,6 +302,9 @@ public abstract class SnapshotBuilder<T extends ITileForSnapshotBuilder> impleme
                 false
             )
         );
+        blocksToCheck.clear();
+        toCheckForPlacing.clear();
+        toCheckForBreaking.clear();
     }
 
     public T getTile() {
