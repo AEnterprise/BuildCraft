@@ -139,7 +139,7 @@ public class BCTransportItems {
             makePipeItem(BCTransportPipes.stonePower),
             makePipeItem(BCTransportPipes.quartzPower),
             makePipeItem(BCTransportPipes.goldPower),
-            //makePipeItem(BCTransportPipes.ironPower),
+            makePipeItem(BCTransportPipes.ironPower),
             makePipeItem(BCTransportPipes.sandstonePower)
         );
 

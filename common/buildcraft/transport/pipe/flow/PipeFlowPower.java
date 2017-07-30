@@ -7,10 +7,12 @@
 package buildcraft.transport.pipe.flow;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.function.ToLongFunction;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -227,45 +229,43 @@ public class PipeFlowPower extends PipeFlow implements IFlowPower, IDebuggable {
         for (EnumFacing face : EnumFacing.VALUES) {
             Section s = sections.get(face);
             if (s.internalPower > 0) {
-                long totalPowerQuery = 0;
-                for (EnumFacing face2 : EnumFacing.VALUES) {
-                    if (face != face2) {
-                        totalPowerQuery += sections.get(face2).powerQuery;
-                    }
-                }
-
-                if (totalPowerQuery > 0) {
-                    long unusedPowerQuery = totalPowerQuery;
-                    for (EnumFacing face2 : EnumFacing.VALUES) {
-                        if (face == face2) {
-                            continue;
-                        }
-                        Section s2 = sections.get(face2);
-                        if (s2.powerQuery > 0) {
-                            long watts = Math.min(s.internalPower * s2.powerQuery / unusedPowerQuery, s.internalPower);
-                            unusedPowerQuery -= s2.powerQuery;
-                            IPipe neighbour = pipe.getConnectedPipe(face2);
-                            long leftover = watts;
-                            if (neighbour != null && neighbour.getFlow() instanceof PipeFlowPower
-                                && neighbour.isConnected(face2.getOpposite())) {
-                                PipeFlowPower oFlow = (PipeFlowPower) neighbour.getFlow();
-                                leftover = oFlow.sections.get(face2.getOpposite()).receivePowerInternal(watts);
+                IPipe neighbour = pipe.getConnectedPipe(face.getOpposite());
+                if (neighbour != null && neighbour.getFlow() instanceof PipeFlowPower) {
+                    PipeFlowPower oFlow = (PipeFlowPower) neighbour.getFlow();
+                    oFlow.sections.get(face).receivePowerInternal(s.internalPower);
+                } else {
+                    IMjReceiver receiver =
+                        pipe.getHolder().getCapabilityFromPipe(face.getOpposite(), MjAPI.CAP_RECEIVER);
+                    if (receiver != null) {
+                        if (receiver.canReceive())
+                            receiver.receivePower(s.internalPower, false);
+                    } else {
+                        List<Object> receivers = new ArrayList<>();
+                        for (EnumFacing face2 : EnumFacing.VALUES) {
+                            if (face2 == face)
+                                continue;
+                            IPipe pipe = this.pipe.getConnectedPipe(face2);
+                            if (pipe != null && pipe.getFlow() instanceof PipeFlowPower) {
+                                receivers.add(((PipeFlowPower) pipe.getFlow()).sections.get(face2.getOpposite()));
                             } else {
-                                IMjReceiver receiver =
-                                    pipe.getHolder().getCapabilityFromPipe(face2, MjAPI.CAP_RECEIVER);
-                                if (receiver != null && receiver.canReceive()) {
-                                    leftover = receiver.receivePower(watts, false);
+                                receiver = this.pipe.getHolder().getCapabilityFromPipe(face2, MjAPI.CAP_RECEIVER);
+                                if (receiver != null) {
+                                    receivers.add(receiver);
                                 }
                             }
-                            long used = watts - leftover;
-                            s.internalPower -= used;
-                            s2.debugPowerOutput += used;
-
-                            s.powerAverage.push((int) used);
-                            s2.powerAverage.push((int) used);
+                        }
+                        for (Object mjReceiver: receivers) {
+                            if (mjReceiver instanceof Section) {
+                                ((Section) mjReceiver).receivePowerInternal(s.internalPower / receivers.size());
+                            } else if (mjReceiver instanceof IMjReceiver) {
+                                ((IMjReceiver)mjReceiver).receivePower(s.internalPower / receivers.size(), false);
+                            }
                         }
                     }
+
                 }
+                s.powerAverage.push((int) s.internalPower);
+                s.internalPower = 0;
             }
         }
         // Render compute goes here

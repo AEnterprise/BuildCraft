@@ -69,7 +69,7 @@ public class BCTransportPipes {
 
     public static PipeDefinition ironItem;
     public static PipeDefinition ironFluid;
-    // public static PipeDefinition ironPower;
+    public static PipeDefinition ironPower;
 
     public static PipeDefinition diamondItem;
     public static PipeDefinition diamondFluid;
@@ -132,7 +132,7 @@ public class BCTransportPipes {
         builder.logic(PipeBehaviourIron::new, PipeBehaviourIron::new).texSuffixes("_clear", "_filled");
         ironItem = builder.idTexPrefix("iron_item").flowItem().define();
         ironFluid = builder.idTexPrefix("iron_fluid").flowFluid().define();
-        // ironPower = builder.idTexPrefix("iron_power").flowPower().define();
+        ironPower = builder.idTexPrefix("iron_power").flowPower().define();
 
         String[] diamondTextureSuffixes = new String[8];
         diamondTextureSuffixes[0] = "";

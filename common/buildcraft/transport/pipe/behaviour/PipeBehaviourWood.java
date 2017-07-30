@@ -142,7 +142,7 @@ public class PipeBehaviourWood extends PipeBehaviourDirectional implements IMjRe
 
     @Override
     public long receivePower(long microJoules, boolean simulate) {
-        return mjBattery.addPowerChecking(microJoules, simulate);
+        return mjBattery.addPower(microJoules, simulate);
     }
 
     @Override
