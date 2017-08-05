@@ -14,6 +14,7 @@ import buildcraft.api.transport.pipe.IPipe;
 import buildcraft.api.transport.pipe.PipeEventFluid;
 import buildcraft.api.transport.pipe.PipeEventHandler;
 import buildcraft.api.transport.pipe.PipeEventItem;
+import buildcraft.api.transport.pipe.PipeEventPower;
 
 public class PipeBehaviourIron extends PipeBehaviourDirectional {
     public PipeBehaviourIron(IPipe pipe) {
@@ -62,5 +63,10 @@ public class PipeBehaviourIron extends PipeBehaviourDirectional {
         if (currentDir.face == insert.from) {
             insert.cancel();
         }
+    }
+
+    @PipeEventHandler
+    public void powerDirection(PipeEventPower.PrimaryDirection event) {
+        event.setFacing(currentDir.face);
     }
 }

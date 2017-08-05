@@ -9,12 +9,15 @@ package buildcraft.transport.pipe.behaviour;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 
+import buildcraft.api.mj.IMjReceiver;
+import buildcraft.api.mj.MjAPI;
 import buildcraft.api.transport.pipe.IPipe;
 import buildcraft.api.transport.pipe.IPipe.ConnectedType;
 import buildcraft.api.transport.pipe.PipeBehaviour;
 import buildcraft.api.transport.pipe.PipeEventFluid;
 import buildcraft.api.transport.pipe.PipeEventHandler;
 import buildcraft.api.transport.pipe.PipeEventItem;
+import buildcraft.api.transport.pipe.PipeEventPower;
 
 public class PipeBehaviourClay extends PipeBehaviour {
     public PipeBehaviourClay(IPipe pipe) {
@@ -48,6 +51,20 @@ public class PipeBehaviourClay extends PipeBehaviour {
                  * above the correct filters. (Although note that the filters still matter) */
                 ordering.increasePriority(face, 100);
             }
+        }
+    }
+
+    @PipeEventHandler
+    public void prePower(PipeEventPower.PrePowerSend event) {
+        for (EnumFacing face : EnumFacing.VALUES) {
+            if (face == event.getFrom())
+                continue;
+            IMjReceiver receiver = event.holder.getCapabilityFromPipe(face, MjAPI.CAP_RECEIVER);
+            if (receiver != null && receiver.canReceive()) {
+                event.getSection().internalPower = receiver.receivePower(event.getSection().internalPower, false);
+            }
+            if (event.getSection().internalPower <= 0)
+                return;
         }
     }
 }

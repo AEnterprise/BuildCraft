@@ -35,7 +35,6 @@ import buildcraft.api.mj.MjAPI;
 import buildcraft.api.tiles.IDebuggable;
 import buildcraft.api.transport.pipe.IFlowPower;
 import buildcraft.api.transport.pipe.IPipe;
-import buildcraft.api.transport.pipe.IPipe.ConnectedType;
 import buildcraft.api.transport.pipe.PipeApi;
 import buildcraft.api.transport.pipe.PipeApi.PowerTransferInfo;
 import buildcraft.api.transport.pipe.PipeEventPower;
@@ -229,13 +228,17 @@ public class PipeFlowPower extends PipeFlow implements IFlowPower, IDebuggable {
         for (EnumFacing face : EnumFacing.VALUES) {
             Section s = sections.get(face);
             if (s.internalPower > 0) {
-                IPipe neighbour = pipe.getConnectedPipe(face.getOpposite());
+                pipe.getHolder().fireEvent(new PipeEventPower.PrePowerSend(pipe.getHolder(), this, s, face));
+                PipeEventPower.PrimaryDirection event = new PipeEventPower.PrimaryDirection(pipe.getHolder(), this, face.getOpposite());
+                pipe.getHolder().fireEvent(event);
+                EnumFacing direction = event.getFacing();
+                IPipe neighbour = pipe.getConnectedPipe(direction);
                 if (neighbour != null && neighbour.getFlow() instanceof PipeFlowPower) {
                     PipeFlowPower oFlow = (PipeFlowPower) neighbour.getFlow();
                     oFlow.sections.get(face).receivePowerInternal(s.internalPower);
                 } else {
                     IMjReceiver receiver =
-                        pipe.getHolder().getCapabilityFromPipe(face.getOpposite(), MjAPI.CAP_RECEIVER);
+                        pipe.getHolder().getCapabilityFromPipe(direction, MjAPI.CAP_RECEIVER);
                     if (receiver != null) {
                         if (receiver.canReceive())
                             receiver.receivePower(s.internalPower, false);
@@ -278,7 +281,7 @@ public class PipeFlowPower extends PipeFlow implements IFlowPower, IDebuggable {
 
         // Compute the tiles requesting power that are not power pipes
         for (EnumFacing face : EnumFacing.VALUES) {
-            if (pipe.getConnectedType(face) != ConnectedType.TILE) {
+            if (pipe.getConnectedType(face) != IPipe.ConnectedType.TILE) {
                 continue;
             }
             IMjReceiver recv = pipe.getHolder().getCapabilityFromPipe(face, MjAPI.CAP_RECEIVER);
@@ -375,7 +378,8 @@ public class PipeFlowPower extends PipeFlow implements IFlowPower, IDebuggable {
         public final AverageInt powerAverage = new AverageInt(10);
 
         long powerQuery;
-        long internalPower;
+        //TODO: probably needs to be handled better, temp for testing out clay pipe mechanics
+        public long internalPower;
 
         /** Debugging fields */
         long debugPowerInput, debugPowerOutput, debugPowerOffered;
@@ -440,5 +444,10 @@ public class PipeFlowPower extends PipeFlow implements IFlowPower, IDebuggable {
         IN,
         OUT,
         STATIONARY
+    }
+
+    public class TransferHandler {
+
+
     }
 }

@@ -80,6 +80,7 @@ public class BCTransportPipes {
 
     public static PipeDefinition clayItem;
     public static PipeDefinition clayFluid;
+    public static PipeDefinition clayPower;
 
     public static PipeDefinition voidItem;
     public static PipeDefinition voidFluid;
@@ -156,6 +157,7 @@ public class BCTransportPipes {
         builder.logic(PipeBehaviourClay::new, PipeBehaviourClay::new);
         clayItem = builder.idTex("clay_item").flowItem().define();
         clayFluid = builder.idTex("clay_fluid").flowFluid().define();
+        clayPower = builder.idTex("clay_power").flowPower().define();
 
         builder.logic(PipeBehaviourVoid::new, PipeBehaviourVoid::new);
         voidItem = builder.idTex("void_item").flowItem().define();

@@ -60,7 +60,7 @@ public class BCTransportItems {
 
     public static final ItemPipeHolder PIPE_IRON_ITEM = null;
     public static final ItemPipeHolder PIPE_IRON_FLUID = null;
-    // public static final ItemPipeHolder pipePowerIron = null;
+    public static final ItemPipeHolder PIPE_IRON_POWER = null;
 
     public static final ItemPipeHolder PIPE_DIAMOND_ITEM = null;
     public static final ItemPipeHolder PIPE_DIAMOND_FLUID = null;
@@ -73,6 +73,7 @@ public class BCTransportItems {
 
     public static final ItemPipeHolder PIPE_CLAY_ITEM = null;
     public static final ItemPipeHolder PIPE_CLAY_FLUID = null;
+    public static final ItemPipeHolder PIPE_CLAY_POWER = null;
 
     public static final ItemPipeHolder PIPE_VOID_ITEM = null;
     public static final ItemPipeHolder PIPE_VOID_FLUID = null;
@@ -140,7 +141,8 @@ public class BCTransportItems {
             makePipeItem(BCTransportPipes.quartzPower),
             makePipeItem(BCTransportPipes.goldPower),
             makePipeItem(BCTransportPipes.ironPower),
-            makePipeItem(BCTransportPipes.sandstonePower)
+            makePipeItem(BCTransportPipes.sandstonePower),
+            makePipeItem(BCTransportPipes.clayPower)
         );
 
     }
@@ -176,12 +178,14 @@ public class BCTransportItems {
             PIPE_SANDSTONE_POWER,
             PIPE_IRON_ITEM,
             PIPE_IRON_FLUID,
+            PIPE_IRON_POWER,
             PIPE_DIAMOND_ITEM,
             PIPE_DIAMOND_FLUID,
             PIPE_DIAWOOD_ITEM,
             PIPE_DIAWOOD_FLUID,
             PIPE_CLAY_ITEM,
             PIPE_CLAY_FLUID,
+            PIPE_CLAY_POWER,
             PIPE_VOID_ITEM,
             PIPE_VOID_FLUID,
             PIPE_OBSIDIAN_ITEM,
