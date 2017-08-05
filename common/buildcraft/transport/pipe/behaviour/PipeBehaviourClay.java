@@ -17,7 +17,8 @@ import buildcraft.api.transport.pipe.PipeBehaviour;
 import buildcraft.api.transport.pipe.PipeEventFluid;
 import buildcraft.api.transport.pipe.PipeEventHandler;
 import buildcraft.api.transport.pipe.PipeEventItem;
-import buildcraft.api.transport.pipe.PipeEventPower;
+
+import buildcraft.transport.pipe.flow.PrePowerSendEvent;
 
 public class PipeBehaviourClay extends PipeBehaviour {
     public PipeBehaviourClay(IPipe pipe) {
@@ -55,7 +56,7 @@ public class PipeBehaviourClay extends PipeBehaviour {
     }
 
     @PipeEventHandler
-    public void prePower(PipeEventPower.PrePowerSend event) {
+    public void prePower(PrePowerSendEvent event) {
         for (EnumFacing face : EnumFacing.VALUES) {
             if (face == event.getFrom())
                 continue;

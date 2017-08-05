@@ -228,7 +228,7 @@ public class PipeFlowPower extends PipeFlow implements IFlowPower, IDebuggable {
         for (EnumFacing face : EnumFacing.VALUES) {
             Section s = sections.get(face);
             if (s.internalPower > 0) {
-                pipe.getHolder().fireEvent(new PipeEventPower.PrePowerSend(pipe.getHolder(), this, s, face));
+                pipe.getHolder().fireEvent(new PrePowerSendEvent(pipe.getHolder(), this, s, face));
                 PipeEventPower.PrimaryDirection event = new PipeEventPower.PrimaryDirection(pipe.getHolder(), this, face.getOpposite());
                 pipe.getHolder().fireEvent(event);
                 EnumFacing direction = event.getFacing();
